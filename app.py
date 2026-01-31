@@ -68,36 +68,25 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Load model 
-# --- GANTI BAGIAN INI DI app2.py ---
-
+# Load model (BAGIAN YANG DIPERBAIKI)
 @st.cache_resource
-def load_artifacts():
-    # 1. Definisikan variabel dengan nilai awal None (PENTING AGAR TIDAK ERROR VARIABLE NOT FOUND)
-    model = None
-    scaler = None
-    feature_names = None
-    scaled_features_list = None
-
+def load_model():
     try:
-        # 2. Load artifacts utama
         model = joblib.load("logreg_model.pkl")
         scaler = joblib.load("scaler.pkl")
         feature_names = joblib.load("feature_names.pkl")
         
-        # 3. Load artifacts tambahan (dengan try-except tersendiri)
+        # Coba load list fitur scaled, jika tidak ada, gunakan default list
+        # Ini mencegah error NameError
         try:
             scaled_features_list = joblib.load("scaled_features_list.pkl")
         except:
-            # Jika file list hilang/rusak, gunakan default hardcoded
+            # Default list fitur numerik yang biasanya discale
             scaled_features_list = ["BMI", "MentHlth", "PhysHlth", "Age", "Education", "Income", "GenHlth"]
             
-    except Exception as e:
-        # 4. Tampilkan pesan error ASLI jika gagal load (misal karena beda versi)
-        st.error(f"⚠️ Terjadi kesalahan saat memuat model: {e}")
+        return model, scaler, feature_names, scaled_features_list
+    except FileNotFoundError:
         return None, None, None, None
-
-    return model, scaler, feature_names, scaled_features_list
 
 # Load dataset dashboard
 @st.cache_data
@@ -810,5 +799,4 @@ elif st.session_state.page == 'prediction':
             if c1.button("← Edit Data", use_container_width=True): 
                 st.session_state.show_prediction = False; st.rerun()
             if c2.button("🔄 Mulai Ulang", use_container_width=True): 
-
                 reset_form(); st.rerun()
